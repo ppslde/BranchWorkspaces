@@ -75,6 +75,9 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Community.VisualStudio.Toolkit.17">
+      <Version>17.0.451</Version>
+    </PackageReference>
     <PackageReference Include="Community.VisualStudio.Toolkit.Analyzers">
       <Version>1.0.451</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

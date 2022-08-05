@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Plugin", "Branch.Workspaces\Branch.Workspaces.Plugin.csproj", "{EC53726F-3521-4E9B-B96F-12AAAFABD986}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Plugin", "src\Branch.Workspaces\Branch.Workspaces.Plugin.csproj", "{EC53726F-3521-4E9B-B96F-12AAAFABD986}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Core", "Branch.Workspaces.Core\Branch.Workspaces.Core.csproj", "{42C038CC-1877-4BB3-B328-428C74B180D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Core", "src\Branch.Workspaces.Core\Branch.Workspaces.Core.csproj", "{42C038CC-1877-4BB3-B328-428C74B180D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Infrastructure", "Branch.Workspaces.Infrastructure\Branch.Workspaces.Infrastructure.csproj", "{CC4CDDCA-06D3-4FB0-B6DC-D2F998F91E70}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Branch.Workspaces.Infrastructure", "src\Branch.Workspaces.Infrastructure\Branch.Workspaces.Infrastructure.csproj", "{CC4CDDCA-06D3-4FB0-B6DC-D2F998F91E70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

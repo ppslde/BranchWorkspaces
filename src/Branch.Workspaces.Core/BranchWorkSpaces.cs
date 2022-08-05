@@ -16,7 +16,7 @@ namespace Branch.Workspaces.Core
 
         public async Task OnNewSolutionOpened(string solutionFile)
         {
-
+            var info = await _versionControlService.GetRepositoryInfosAsync(solutionFile);
 
 
         }
