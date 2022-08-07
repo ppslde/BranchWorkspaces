@@ -1,13 +1,13 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Branch.Workspaces.Core;
+﻿using Branch.Workspaces.Core;
 using Branch.Workspaces.Infrastructure;
 using Community.VisualStudio.Toolkit;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -19,25 +19,58 @@ namespace Branch.Workspaces.Plugin
         private BranchWorkSpaces _workSpaces;
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            //await JoinableTaskFactory.SwitchToMainThreadAsync();
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            if (await VS.Solutions.IsOpenAsync())
+            try
             {
-                var solution = await VS.Solutions.GetCurrentSolutionAsync();
-                HandleOpenSolution(solution);
+                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService());
+
+                if (await VS.Solutions.IsOpenAsync())
+                {
+                    var solution = await VS.Solutions.GetCurrentSolutionAsync();
+                    HandleOpenSolution(solution);
+                }
+
+                VS.Events.SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;
+                VS.Events.SolutionEvents.OnAfterOpenSolution += HandleOpenSolution;
+                VS.Events.ShellEvents.ShutdownStarted += HandleCloseSolution;
             }
-
-            _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService());
-
-            VS.Events.SolutionEvents.OnAfterOpenSolution += HandleOpenSolution;
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync(ex.Message);
+            }
         }
 
+        private void HandleCloseSolution()
+        {
+
+            _ = JoinableTaskFactory
+                .RunAsync(async () =>
+                {
+                    try
+                    {
+                        await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                        var solution = await VS.Solutions.GetCurrentSolutionAsync();
+
+                        foreach (var item in await VS.Windows.GetAllDocumentWindowsAsync())
+                        {
+                            var doc = await item.GetDocumentViewAsync();
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await Console.Error.WriteLineAsync(ex.Message);
+                    }
+                });
+        }
 
         private void HandleOpenSolution(Solution solution)
         {
-            JoinableTaskFactory
-                .RunAsync(async () => await _workSpaces.OnNewSolutionOpened(solution.FullPath))
-                .FireAndForget();
+            _ = JoinableTaskFactory
+                .RunAsync(async () =>
+                await _workSpaces.OnNewSolutionOpened(solution.FullPath));
         }
     }
 }

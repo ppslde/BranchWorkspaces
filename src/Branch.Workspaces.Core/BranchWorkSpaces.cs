@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
-using Branch.Workspaces.Core.Interfaces;
+﻿using Branch.Workspaces.Core.Interfaces;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Core
 {
@@ -16,7 +18,15 @@ namespace Branch.Workspaces.Core
 
         public async Task OnNewSolutionOpened(string solutionFile)
         {
-            var info = await _versionControlService.GetRepositoryInfosAsync(solutionFile);
+            try
+            {
+                var solutionDir = Path.GetDirectoryName(solutionFile);
+                var info = await _versionControlService.GetRepositoryInfosAsync(solutionDir);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
 
         }

@@ -5,7 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LibGit2Sharp" Version="0.26.2" />
+    <Content Include="$(NuGetPackageRoot)\libgit2sharp.nativebinaries\2.0.306\runtimes\win-x64\native\git2-106a5f2.dll" Link="git2-106a5f2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="LibGit2Sharp" Version="0.26.2">
+	  </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
