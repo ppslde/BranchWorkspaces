@@ -1,3 +1,14 @@
+What Todo:
+	* OnSolutionClose/OnVsClose: save all opened files, save all (active) breakpoints in context of opened solution and branch
+	* OnSolutionOpen: restore all documents and breakpoints stored in context of opened solution and branch
+	
+	+ further ideas:
+		* tasks (kanban style?) in context of opened solution and branch
+		* settings for changing e.g. storage location, storage type?
+
+
+
+
 https://www.youtube.com/watch?v=RjArS-axCt0
 https://marketplace.visualstudio.com/items?itemName=MadsKristensen.AddNewFile64
 https://github.com/madskristensen/SolutionColors/blob/master/src/SolutionColors.csproj

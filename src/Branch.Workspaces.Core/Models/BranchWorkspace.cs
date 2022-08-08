@@ -1,6 +1,6 @@
 ﻿namespace Branch.Workspaces.Core.Models
 {
-    public class VersionControlInfo
+    public struct BranchWorkspace
     {
         public string Id { get; set; }
         public string Name { get; set; }

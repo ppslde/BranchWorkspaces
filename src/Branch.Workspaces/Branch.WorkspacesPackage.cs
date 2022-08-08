@@ -1,20 +1,20 @@
-﻿using Branch.Workspaces.Core;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Branch.Workspaces.Core;
 using Branch.Workspaces.Infrastructure;
 using Community.VisualStudio.Toolkit;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
-using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Plugin
 {
     [Guid("d74c7bff-800c-4ccc-904a-dd695dc36f8c")]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string, PackageAutoLoadFlags.BackgroundLoad)]
-    public sealed class BranchWorkspacesPackage : AsyncPackage
+    public sealed class BranchWorkspacesPackage : ToolkitPackage
     {
         private BranchWorkSpaces _workSpaces;
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
@@ -37,31 +37,26 @@ namespace Branch.Workspaces.Plugin
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync(ex.Message);
+                await ex.LogAsync();
             }
         }
 
         private void HandleCloseSolution()
         {
-
             _ = JoinableTaskFactory
                 .RunAsync(async () =>
                 {
                     try
                     {
-                        await JoinableTaskFactory.SwitchToMainThreadAsync();
+                        var solution = await VS.Solutions.GetWorkspaceSolutionAsync();
 
-                        var solution = await VS.Solutions.GetCurrentSolutionAsync();
+                        var documents = await VS.Windows.GetWorkspaceDocumentsAsync();
 
-                        foreach (var item in await VS.Windows.GetAllDocumentWindowsAsync())
-                        {
-                            var doc = await item.GetDocumentViewAsync();
-
-                        }
+                        var breakpoints = await VS.Debugger.GetWorkspaceBreakpointsAsync(GetServiceAsync);
                     }
                     catch (Exception ex)
                     {
-                        await Console.Error.WriteLineAsync(ex.Message);
+                        await ex.LogAsync();
                     }
                 });
         }

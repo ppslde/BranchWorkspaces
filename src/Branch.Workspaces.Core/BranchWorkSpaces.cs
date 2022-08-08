@@ -1,7 +1,9 @@
-﻿using Branch.Workspaces.Core.Interfaces;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Branch.Workspaces.Core.Interfaces;
+using Branch.Workspaces.Core.Models;
 
 namespace Branch.Workspaces.Core
 {
@@ -29,6 +31,11 @@ namespace Branch.Workspaces.Core
             }
 
 
+        }
+
+        public async Task OnSolutionClose(BranchWorkspaceSolution solutionFile, IEnumerable<BranchWorkspaceDocument> openFiles, IEnumerable<BranchWorkspaceBreakpoint> breakpoints)
+        {
+            await _persistenceService.GetSolutionAsync("");
         }
     }
 }
