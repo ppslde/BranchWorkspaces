@@ -1,4 +1,5 @@
 What Todo:
+	* to Save items: opened documents, breakpoint, extended nodes from solution explorer
 	* OnSolutionClose/OnVsClose: save all opened files, save all (active) breakpoints in context of opened solution and branch
 	* OnSolutionOpen: restore all documents and breakpoints stored in context of opened solution and branch
 	
