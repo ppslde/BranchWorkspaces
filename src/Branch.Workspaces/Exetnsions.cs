@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Branch.Workspaces.Core.Models;
+using EnvDTE;
+using Microsoft;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Branch.Workspaces.Core.Models;
-using EnvDTE;
-using Microsoft;
-using Microsoft.VisualStudio.Shell;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -16,7 +16,7 @@ namespace Branch.Workspaces.Plugin
         public static async Task GetWorkspaceTreeItemsAsync(this Community.VisualStudio.Toolkit.Solutions s, Func<Type, Task<object>> serviceProvider)
         {
             //TODO: Find out, how to get the hierarchy, as the items are empty after the root object!
-            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(EnvDTE.DTE));
+            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(DTE));
             Assumes.Present(dte);
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -37,10 +37,10 @@ namespace Branch.Workspaces.Plugin
 
 
 
-            foreach (Project item in dte.Solution.Projects)
-            {
+            //foreach (Project item in dte.Solution.Projects)
+            //{
 
-            }
+            //}
         }
 
         public static void Collapse(UIHierarchyItem item, ref UIHierarchy solutionExplorer)
@@ -94,14 +94,35 @@ namespace Branch.Workspaces.Plugin
             return documents;
         }
 
-        public static async Task<IEnumerable<BranchWorkspaceBreakpoint>> GetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, Func<Type, Task<object>> serviceProvider)
+        public static async Task SetWorkspaceDocumentsAsync(this Community.VisualStudio.Toolkit.Windows w, IEnumerable<BranchWorkspaceDocument> documents, Func<Type, Task<object>> serviceProvider)
         {
-            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(EnvDTE.DTE));
+
+            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(DTE));
             Assumes.Present(dte);
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            return dte.Debugger.Breakpoints.Cast<EnvDTE.Breakpoint>()
+            dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
+            foreach (var doc in documents)
+            {
+                dte.Documents.Open(doc.Path);
+            }
+            //            dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
+            //            foreach (var document in documents)
+
+            //                // dte.ExecuteCommand("File.OpenFile", document.Path);
+            //                dte.Documents.Open(document.Path);
+            //.            
+        }
+
+        public static async Task<IEnumerable<BranchWorkspaceBreakpoint>> GetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, Func<Type, Task<object>> serviceProvider)
+        {
+            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(DTE));
+            Assumes.Present(dte);
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            return dte.Debugger.Breakpoints.Cast<Breakpoint>()
                 .Select(b =>
                 {
                     ThreadHelper.ThrowIfNotOnUIThread();

@@ -18,7 +18,7 @@ namespace Branch.Workspaces.Core.Models
             if (!(obj is BranchWorkspace ws))
                 return false;
 
-            return Id == ws.Id && ws.WorkDir == ws.WorkDir && ws.Name == ws.Name;
+            return Id == ws.Id && WorkDir == ws.WorkDir && Name == ws.Name;
         }
 
         public override int GetHashCode()

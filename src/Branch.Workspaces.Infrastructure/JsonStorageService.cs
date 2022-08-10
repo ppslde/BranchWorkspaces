@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Branch.Workspaces.Core.Interfaces;
+using Branch.Workspaces.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Branch.Workspaces.Core.Interfaces;
-using Branch.Workspaces.Core.Models;
 
 namespace Branch.Workspaces.Infrastructure
 {
@@ -30,7 +30,7 @@ namespace Branch.Workspaces.Infrastructure
         {
             await EnsureLoadedAsync();
 
-            BranchWorkspace ws = _storageModel.Workspaces.SingleOrDefault(w => w.WorkDir == workspace.WorkDir);
+            BranchWorkspace ws = _storageModel.Workspaces.SingleOrDefault(w => w.Equals(workspace));
             if (ws != null)
                 _storageModel.Workspaces.Remove(ws);
 
@@ -69,7 +69,10 @@ namespace Branch.Workspaces.Infrastructure
         private async Task EnsureSavedAsync()
         {
             using (FileStream stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Write, FileShare.None))
+            {
+                stream.SetLength(0);
                 await JsonSerializer.SerializeAsync(stream, _storageModel);
+            }
         }
 
         private void OnStorageFileChanged(object sender, FileSystemEventArgs e)

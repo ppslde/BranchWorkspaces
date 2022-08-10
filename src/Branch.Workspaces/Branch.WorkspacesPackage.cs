@@ -1,13 +1,13 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Branch.Workspaces.Core;
+﻿using Branch.Workspaces.Core;
 using Branch.Workspaces.Infrastructure;
 using Community.VisualStudio.Toolkit;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -23,7 +23,7 @@ namespace Branch.Workspaces.Plugin
 
             try
             {
-                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService(@"C:\Temp\ws.json"));
+                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService(@"C:\Tmp\ws.json"));
 
                 if (await VS.Solutions.IsOpenAsync())
                 {
@@ -73,6 +73,8 @@ namespace Branch.Workspaces.Plugin
                         var workspace = await _workSpaces.LoadSolutionItems(await VS.Solutions.GetWorkspaceSolutionAsync(openedSolution));
                         if (workspace == null)
                             return;
+
+                        await VS.Windows.SetWorkspaceDocumentsAsync(workspace.Documents, GetServiceAsync);
                     }
                     catch (Exception ex)
                     {
