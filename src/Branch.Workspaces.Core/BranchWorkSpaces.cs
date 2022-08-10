@@ -18,24 +18,29 @@ namespace Branch.Workspaces.Core
             _persistenceService = persistenceService;
         }
 
-        public async Task OnNewSolutionOpened(string solutionFile)
+        public async Task<BranchWorkspace> LoadSolutionItems(BranchWorkspaceSolution solution)
         {
             try
             {
-                var solutionDir = Path.GetDirectoryName(solutionFile);
-                var info = await _versionControlService.GetRepositoryInfosAsync(solutionDir);
+                var workspace = await _versionControlService.GetRepositoryInfosAsync(Path.GetDirectoryName(solution.Path));
+                return await _persistenceService.LoadWorkspace(workspace);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
 
-
+            return null;
         }
 
-        public async Task OnSolutionClose(BranchWorkspaceSolution solutionFile, IEnumerable<BranchWorkspaceDocument> openFiles, IEnumerable<BranchWorkspaceBreakpoint> breakpoints)
+        public async Task SaveSolutionItems(BranchWorkspaceSolution solution, IEnumerable<BranchWorkspaceDocument> openFiles, IEnumerable<BranchWorkspaceBreakpoint> breakpoints)
         {
-            await _persistenceService.GetSolutionAsync("");
+            var workspace = await _versionControlService.GetRepositoryInfosAsync(Path.GetDirectoryName(solution.Path));
+            workspace.Solution = solution;
+            workspace.Documents = openFiles;
+            workspace.Breakpoints = breakpoints;
+
+            await _persistenceService.SaveWorkspace(workspace);
         }
     }
 }

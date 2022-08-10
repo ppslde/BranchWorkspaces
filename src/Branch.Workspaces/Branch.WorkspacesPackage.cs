@@ -23,7 +23,7 @@ namespace Branch.Workspaces.Plugin
 
             try
             {
-                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService());
+                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService(@"C:\Temp\ws.json"));
 
                 if (await VS.Solutions.IsOpenAsync())
                 {
@@ -48,11 +48,13 @@ namespace Branch.Workspaces.Plugin
                 {
                     try
                     {
+                        await VS.Solutions.GetWorkspaceTreeItemsAsync(GetServiceAsync);
+
                         var solution = await VS.Solutions.GetWorkspaceSolutionAsync();
-
                         var documents = await VS.Windows.GetWorkspaceDocumentsAsync();
-
                         var breakpoints = await VS.Debugger.GetWorkspaceBreakpointsAsync(GetServiceAsync);
+
+                        await _workSpaces.SaveSolutionItems(solution, documents, breakpoints);
                     }
                     catch (Exception ex)
                     {
@@ -61,11 +63,22 @@ namespace Branch.Workspaces.Plugin
                 });
         }
 
-        private void HandleOpenSolution(Solution solution)
+        private void HandleOpenSolution(Solution openedSolution)
         {
             _ = JoinableTaskFactory
                 .RunAsync(async () =>
-                await _workSpaces.OnNewSolutionOpened(solution.FullPath));
+                {
+                    try
+                    {
+                        var workspace = await _workSpaces.LoadSolutionItems(await VS.Solutions.GetWorkspaceSolutionAsync(openedSolution));
+                        if (workspace == null)
+                            return;
+                    }
+                    catch (Exception ex)
+                    {
+                        await ex.LogAsync();
+                    }
+                });
         }
     }
 }

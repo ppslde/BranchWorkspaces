@@ -1,9 +1,11 @@
 ﻿using System.Threading.Tasks;
+using Branch.Workspaces.Core.Models;
 
 namespace Branch.Workspaces.Core.Interfaces
 {
     public interface IPersistenceService
     {
-        Task GetSolutionAsync(string solutionIdentifier);
+        Task<BranchWorkspace> LoadWorkspace(BranchWorkspace workspace);
+        Task SaveWorkspace(BranchWorkspace workspace);
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Branch.Workspaces.Core.Models;
+using EnvDTE;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
 
@@ -12,9 +13,61 @@ namespace Branch.Workspaces.Plugin
     static class Exetnsions
     {
 
-        public static async Task<BranchWorkspaceSolution> GetWorkspaceSolutionAsync(this Community.VisualStudio.Toolkit.Solutions s)
+        public static async Task GetWorkspaceTreeItemsAsync(this Community.VisualStudio.Toolkit.Solutions s, Func<Type, Task<object>> serviceProvider)
         {
-            var solution = await s.GetCurrentSolutionAsync();
+            //TODO: Find out, how to get the hierarchy, as the items are empty after the root object!
+            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(EnvDTE.DTE));
+            Assumes.Present(dte);
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            UIHierarchy solutionExplorer = dte.ToolWindows.SolutionExplorer;
+            if (solutionExplorer.UIHierarchyItems.Count <= 0)
+                return;
+
+            UIHierarchyItem rootNode = solutionExplorer.UIHierarchyItems.Item(1);
+
+            Collapse(rootNode, ref solutionExplorer);
+
+            foreach (UIHierarchyItem item in dte.ToolWindows.SolutionExplorer.UIHierarchyItems)
+            {
+
+
+            }
+
+
+
+            foreach (Project item in dte.Solution.Projects)
+            {
+
+            }
+        }
+
+        public static void Collapse(UIHierarchyItem item, ref UIHierarchy solutionExplorer)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            foreach (UIHierarchyItem innerItem in item.UIHierarchyItems)
+            {
+                if (innerItem.UIHierarchyItems.Count > 0)
+                {
+                    Collapse(innerItem, ref solutionExplorer);
+                    if (innerItem.UIHierarchyItems.Expanded)
+                    {
+                        innerItem.UIHierarchyItems.Expanded = false;
+                        if (innerItem.UIHierarchyItems.Expanded)
+                        {
+                            innerItem.Select(vsUISelectionType.vsUISelectionTypeSelect);
+                            solutionExplorer.DoDefaultAction();
+                        }
+                    }
+                }
+            }
+        }
+
+        public static async Task<BranchWorkspaceSolution> GetWorkspaceSolutionAsync(this Community.VisualStudio.Toolkit.Solutions s, Community.VisualStudio.Toolkit.Solution solution = null)
+        {
+            solution = solution ?? await s.GetCurrentSolutionAsync();
 
             return new BranchWorkspaceSolution
             {
