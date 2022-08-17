@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Branch.Workspaces.Core.Models;
+using Community.VisualStudio.Toolkit;
 using EnvDTE;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -77,14 +79,19 @@ namespace Branch.Workspaces.Plugin
 
         public static async Task<IEnumerable<BranchWorkspaceDocument>> GetWorkspaceDocumentsAsync(this Community.VisualStudio.Toolkit.Windows w)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var documents = new List<BranchWorkspaceDocument>();
-            foreach (var item in await w.GetAllDocumentWindowsAsync())
+            foreach (WindowFrame item in await w.GetAllDocumentWindowsAsync())
             {
+
+                ((IVsWindowFrame)item).GetProperty((int)__VSFPROPID5.VSFPROPID_IsPinned, out object propVal);
+
                 var doc = await item.GetDocumentViewAsync();
 
                 documents.Add(new BranchWorkspaceDocument
                 {
-                    Path = doc.FilePath
+                    Path = doc.FilePath,
+                    Pinned = (bool)propVal
                 });
             }
 
@@ -100,7 +107,12 @@ namespace Branch.Workspaces.Plugin
 
             dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
             foreach (var doc in documents)
-                dte.Documents.Open(doc.Path);
+            {
+                var d = dte.Documents.Open(doc.Path);
+                IVsWindowFrame x = await w.GetCurrentWindowAsync();
+                x.SetProperty((int)__VSFPROPID5.VSFPROPID_IsPinned, doc.Pinned);
+            }
+
         }
 
         public static async Task SetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, IEnumerable<BranchWorkspaceBreakpoint> workspaceBreakpoints, Func<Type, Task<object>> serviceProvider)
