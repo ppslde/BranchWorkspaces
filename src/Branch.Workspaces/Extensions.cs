@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Branch.Workspaces.Core.Models;
+using Community.VisualStudio.Toolkit;
+using EnvDTE;
+using EnvDTE80;
+using Microsoft;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Branch.Workspaces.Core.Models;
-using Community.VisualStudio.Toolkit;
-using EnvDTE;
-using Microsoft;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -22,26 +23,36 @@ namespace Branch.Workspaces.Plugin
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            UIHierarchy solutionExplorer = dte.ToolWindows.SolutionExplorer;
-            if (solutionExplorer.UIHierarchyItems.Count <= 0)
-                return;
+            UIHierarchyItems hierarchy = dte.ToolWindows.SolutionExplorer.UIHierarchyItems;
 
-            UIHierarchyItem rootNode = solutionExplorer.UIHierarchyItems.Item(1);
+            var explorer = dte.Windows.Item(EnvDTE.Constants.vsWindowKindSolutionExplorer) as Window2;
+            var tree = explorer.Object as UIHierarchy;
 
-            Collapse(rootNode, ref solutionExplorer);
-
-            foreach (UIHierarchyItem item in dte.ToolWindows.SolutionExplorer.UIHierarchyItems)
+            try
             {
-
-
+                dte.SuppressUI = true;
+                CollapseHierarchy(hierarchy);
             }
-
-
+            finally
+            {
+                dte.SuppressUI = false;
+            }
 
             //foreach (Project item in dte.Solution.Projects)
             //{
 
             //}
+        }
+
+        private static void CollapseHierarchy(UIHierarchyItems hierarchy)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            foreach (UIHierarchyItem item in hierarchy.Cast<UIHierarchyItem>().Select(item => item.UIHierarchyItems).OfType<UIHierarchyItem>())
+            {
+                CollapseHierarchy(item.UIHierarchyItems);
+
+                item.UIHierarchyItems.Expanded = false;
+            }
         }
 
         public static void Collapse(UIHierarchyItem item, ref UIHierarchy solutionExplorer)
@@ -87,7 +98,6 @@ namespace Branch.Workspaces.Plugin
                 ((IVsWindowFrame)item).GetProperty((int)__VSFPROPID5.VSFPROPID_IsPinned, out object propVal);
 
                 var doc = await item.GetDocumentViewAsync();
-
                 documents.Add(new BranchWorkspaceDocument
                 {
                     Path = doc.FilePath,
@@ -108,11 +118,10 @@ namespace Branch.Workspaces.Plugin
             dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
             foreach (var doc in documents)
             {
-                var d = dte.Documents.Open(doc.Path);
+                dte.Documents.Open(doc.Path);
                 IVsWindowFrame x = await w.GetCurrentWindowAsync();
                 x.SetProperty((int)__VSFPROPID5.VSFPROPID_IsPinned, doc.Pinned);
             }
-
         }
 
         public static async Task SetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, IEnumerable<BranchWorkspaceBreakpoint> workspaceBreakpoints, Func<Type, Task<object>> serviceProvider)
