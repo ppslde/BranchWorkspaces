@@ -39,6 +39,7 @@ namespace Branch.Workspaces.Core
             workspace.Solution = solution;
             workspace.Documents = openFiles;
             workspace.Breakpoints = breakpoints;
+            workspace.Updated = DateTimeOffset.Now;
 
             await _persistenceService.SaveWorkspace(workspace);
         }

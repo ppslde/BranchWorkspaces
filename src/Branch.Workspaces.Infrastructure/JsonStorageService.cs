@@ -1,11 +1,11 @@
-﻿using Branch.Workspaces.Core.Interfaces;
-using Branch.Workspaces.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Branch.Workspaces.Core.Interfaces;
+using Branch.Workspaces.Core.Models;
 
 namespace Branch.Workspaces.Infrastructure
 {
@@ -14,6 +14,14 @@ namespace Branch.Workspaces.Infrastructure
         private readonly FileInfo _file;
         private FileSystemWatcher _watcher;
         private StorageModel _storageModel;
+
+        private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
 
         public JsonStorageService(string storageFile)
         {
@@ -45,22 +53,20 @@ namespace Branch.Workspaces.Infrastructure
                 return;
 
             StorageModel loadedModel;
+
             if (_file.Exists)
             {
-                using (FileStream stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    loadedModel = await JsonSerializer.DeserializeAsync<StorageModel>(stream);
+                using (FileStream stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Read, FileShare.None))
+                    loadedModel = await JsonSerializer.DeserializeAsync<StorageModel>(stream, _serializerOptions);
             }
             else
             {
                 loadedModel = new StorageModel { Info = new StorageMetaData { Location = _file.FullName } };
                 using (FileStream stream = File.Open(_file.FullName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    await JsonSerializer.SerializeAsync(stream, loadedModel);
+                    await JsonSerializer.SerializeAsync(stream, loadedModel, _serializerOptions);
             }
 
-            lock (loadedModel)
-            {
-                _storageModel = loadedModel;
-            }
+            _storageModel = loadedModel;
 
             _watcher = new FileSystemWatcher(_file.DirectoryName, _file.FullName);
             _watcher.Changed += OnStorageFileChanged;
@@ -68,10 +74,15 @@ namespace Branch.Workspaces.Infrastructure
 
         private async Task EnsureSavedAsync()
         {
+            if (_storageModel == null || _watcher == null)
+                return;
+
+            _storageModel.Info.Updated = DateTimeOffset.Now;
+
             using (FileStream stream = File.Open(_file.FullName, FileMode.Open, FileAccess.Write, FileShare.None))
             {
                 stream.SetLength(0);
-                await JsonSerializer.SerializeAsync(stream, _storageModel);
+                await JsonSerializer.SerializeAsync(stream, _storageModel, _serializerOptions);
             }
         }
 
@@ -88,7 +99,9 @@ namespace Branch.Workspaces.Infrastructure
 
     class StorageMetaData
     {
-        public DateTimeOffset Created { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset Created { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset Updated { get; set; }
+
         public string Location { get; set; }
     }
 

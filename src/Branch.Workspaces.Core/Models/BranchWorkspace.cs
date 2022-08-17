@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Branch.Workspaces.Core.Models
 {
     public class BranchWorkspace
     {
         public string Id { get; set; }
+        public DateTimeOffset Updated { get; set; }
         public string Name { get; set; }
         public string Display { get; set; }
+        public string GitDir { get; set; }
         public string WorkDir { get; set; }
 
         public BranchWorkspaceSolution Solution { get; set; }

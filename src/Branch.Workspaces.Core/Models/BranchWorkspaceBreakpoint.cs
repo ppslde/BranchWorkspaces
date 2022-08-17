@@ -8,5 +8,6 @@
         public string Type { get; set; }
         public string Condition { get; set; }
         public string ConditionType { get; set; }
+        public bool Enabled { get; set; }
     }
 }

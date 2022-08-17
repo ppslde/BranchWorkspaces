@@ -1,18 +1,17 @@
-﻿using Branch.Workspaces.Core.Models;
-using EnvDTE;
-using Microsoft;
-using Microsoft.VisualStudio.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Branch.Workspaces.Core.Models;
+using EnvDTE;
+using Microsoft;
+using Microsoft.VisualStudio.Shell;
 
 namespace Branch.Workspaces.Plugin
 {
-    static class Exetnsions
+    static class Extensions
     {
-
         public static async Task GetWorkspaceTreeItemsAsync(this Community.VisualStudio.Toolkit.Solutions s, Func<Type, Task<object>> serviceProvider)
         {
             //TODO: Find out, how to get the hierarchy, as the items are empty after the root object!
@@ -78,8 +77,6 @@ namespace Branch.Workspaces.Plugin
 
         public static async Task<IEnumerable<BranchWorkspaceDocument>> GetWorkspaceDocumentsAsync(this Community.VisualStudio.Toolkit.Windows w)
         {
-            //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
             var documents = new List<BranchWorkspaceDocument>();
             foreach (var item in await w.GetAllDocumentWindowsAsync())
             {
@@ -96,7 +93,6 @@ namespace Branch.Workspaces.Plugin
 
         public static async Task SetWorkspaceDocumentsAsync(this Community.VisualStudio.Toolkit.Windows w, IEnumerable<BranchWorkspaceDocument> documents, Func<Type, Task<object>> serviceProvider)
         {
-
             var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(DTE));
             Assumes.Present(dte);
 
@@ -104,15 +100,40 @@ namespace Branch.Workspaces.Plugin
 
             dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
             foreach (var doc in documents)
-            {
                 dte.Documents.Open(doc.Path);
-            }
-            //            dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
-            //            foreach (var document in documents)
+        }
 
-            //                // dte.ExecuteCommand("File.OpenFile", document.Path);
-            //                dte.Documents.Open(document.Path);
-            //.            
+        public static async Task SetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, IEnumerable<BranchWorkspaceBreakpoint> workspaceBreakpoints, Func<Type, Task<object>> serviceProvider)
+        {
+            var dte = (EnvDTE80.DTE2)await serviceProvider(typeof(DTE));
+            Assumes.Present(dte);
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            foreach (var item in dte.Debugger.Breakpoints.Cast<Breakpoint>())
+                item.Delete();
+
+            foreach (var b in workspaceBreakpoints)
+                dte.Debugger.Breakpoints.Add(
+                    File: b.File,
+                    Line: b.Line,
+                    Column: b.Column,
+                    Condition: b.Condition,
+                    ConditionType: (dbgBreakpointConditionType)Enum.Parse(typeof(dbgBreakpointConditionType), b.ConditionType)
+                );
+
+            foreach (var b in workspaceBreakpoints.Where(b => !b.Enabled))
+            {
+                var dbg = dte.Debugger.Breakpoints
+                    .Cast<Breakpoint>()
+                    .SingleOrDefault(db =>
+                    {
+                        ThreadHelper.ThrowIfNotOnUIThread();
+                        return db.File == b.File && db.FileLine == b.Line && db.FileColumn == b.Column;
+                    });
+
+                dbg.Enabled = b.Enabled;
+            }
         }
 
         public static async Task<IEnumerable<BranchWorkspaceBreakpoint>> GetWorkspaceBreakpointsAsync(this Community.VisualStudio.Toolkit.Debugger d, Func<Type, Task<object>> serviceProvider)
@@ -126,6 +147,7 @@ namespace Branch.Workspaces.Plugin
                 .Select(b =>
                 {
                     ThreadHelper.ThrowIfNotOnUIThread();
+
                     return new BranchWorkspaceBreakpoint
                     {
                         File = b.File,
@@ -133,7 +155,8 @@ namespace Branch.Workspaces.Plugin
                         Column = b.FileColumn,
                         Type = b.Type.ToString(),
                         Condition = b.Condition,
-                        ConditionType = b.ConditionType.ToString()
+                        ConditionType = b.ConditionType.ToString(),
+                        Enabled = b.Enabled
                     };
                 })
                 .ToArray();
