@@ -1,13 +1,14 @@
-﻿using Branch.Workspaces.Core;
+﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Branch.Workspaces.Core;
 using Branch.Workspaces.Infrastructure;
 using Community.VisualStudio.Toolkit;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
-using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Plugin
 {
@@ -23,7 +24,11 @@ namespace Branch.Workspaces.Plugin
 
             try
             {
-                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService(@"C:\Tmp\ws.json"));
+                string storagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BranchWorkspaces");
+                if (!Directory.Exists(storagePath))
+                    Directory.CreateDirectory(storagePath);
+
+                _workSpaces = new BranchWorkSpaces(new GitService(), new JsonStorageService(Path.Combine(storagePath, "store.json")));
 
                 VS.Events.SolutionEvents.OnAfterBackgroundSolutionLoadComplete += HandlePostSolutionLoading;
                 VS.Events.SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;

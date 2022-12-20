@@ -22,26 +22,47 @@ namespace Branch.Workspaces.Core
         {
             try
             {
-                var workspace = await _versionControlService.GetRepositoryInfosAsync(Path.GetDirectoryName(solution.Path));
+                var workspace = await GetSolutionInfos(solution);
                 return await _persistenceService.LoadWorkspace(workspace);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                throw new Exception($"Error loading branched solution: {solution.SolutionFile}", ex);
             }
-
-            return null;
         }
 
         public async Task SaveSolutionItems(BranchWorkspaceSolution solution, IEnumerable<BranchWorkspaceDocument> openFiles, IEnumerable<BranchWorkspaceBreakpoint> breakpoints)
         {
-            var workspace = await _versionControlService.GetRepositoryInfosAsync(Path.GetDirectoryName(solution.Path));
-            workspace.Solution = solution;
-            workspace.Documents = openFiles;
-            workspace.Breakpoints = breakpoints;
-            workspace.Updated = DateTimeOffset.Now;
+            try
+            {
+                var workspace = await GetSolutionInfos(solution);
+                if (workspace == null)
+                    return;
 
-            await _persistenceService.SaveWorkspace(workspace);
+                workspace.Solution = solution;
+                workspace.Documents = openFiles;
+                workspace.Breakpoints = breakpoints;
+                workspace.Updated = DateTimeOffset.Now;
+
+                await _persistenceService.SaveWorkspace(workspace);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error saving branched solution: {solution.SolutionFile}", ex);
+            }
+        }
+
+        private async Task<BranchWorkspace> GetSolutionInfos(BranchWorkspaceSolution solution)
+        {
+            var workspace = await _versionControlService.GetRepositoryInfosAsync(solution);
+            return workspace ?? new BranchWorkspace
+            {
+                Id = solution.Path,
+                Name = solution.Path,
+                Display = solution.SolutionFile,
+                GitDir = null,
+                WorkDir = Path.GetDirectoryName(solution.Path)
+            };
         }
     }
 }

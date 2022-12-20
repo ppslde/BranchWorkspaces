@@ -5,6 +5,6 @@ namespace Branch.Workspaces.Core.Interfaces
 {
     public interface IVersionControlService
     {
-        Task<BranchWorkspace> GetRepositoryInfosAsync(string repositoryFolder);
+        Task<BranchWorkspace> GetRepositoryInfosAsync(BranchWorkspaceSolution solution);
     }
 }
