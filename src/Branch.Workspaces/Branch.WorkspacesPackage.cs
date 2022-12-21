@@ -32,7 +32,7 @@ namespace Branch.Workspaces.Plugin
 
                 VS.Events.SolutionEvents.OnAfterBackgroundSolutionLoadComplete += HandlePostSolutionLoading;
                 VS.Events.SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;
-                VS.Events.ShellEvents.ShutdownStarted += HandleCloseSolution;
+                VS.Events.ShellEvents.ShutdownStarted += HandleCloseEnv;
 
                 if (await VS.Solutions.IsOpenAsync())
                     HandlePostSolutionLoading();
@@ -41,6 +41,18 @@ namespace Branch.Workspaces.Plugin
             {
                 await ex.LogAsync();
             }
+        }
+
+        private void HandleCloseEnv()
+        {
+            VS.Events.SolutionEvents.OnAfterBackgroundSolutionLoadComplete -= HandlePostSolutionLoading;
+            VS.Events.SolutionEvents.OnBeforeCloseSolution -= HandleCloseSolution;
+            VS.Events.ShellEvents.ShutdownStarted -= HandleCloseEnv;
+
+            HandleCloseSolution();
+
+            _workSpaces.Dispose();
+            _workSpaces = null;
         }
 
         private void HandlePostSolutionLoading()

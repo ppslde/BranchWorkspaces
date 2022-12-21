@@ -7,7 +7,7 @@ using Branch.Workspaces.Core.Models;
 
 namespace Branch.Workspaces.Core
 {
-    public class BranchWorkSpaces
+    public class BranchWorkSpaces : IDisposable
     {
         private readonly IVersionControlService _versionControlService;
         private readonly IPersistenceService _persistenceService;
@@ -63,6 +63,11 @@ namespace Branch.Workspaces.Core
                 GitDir = null,
                 WorkDir = Path.GetDirectoryName(solution.Path)
             };
+        }
+
+        public void Dispose()
+        {
+            _persistenceService.Dispose();
         }
     }
 }

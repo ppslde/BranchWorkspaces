@@ -89,6 +89,11 @@ namespace Branch.Workspaces.Infrastructure
         private void OnStorageFileChanged(object sender, FileSystemEventArgs e)
         {
         }
+
+        public void Dispose()
+        {
+            _watcher?.Dispose();
+        }
     }
 
     class StorageModel

@@ -1,15 +1,15 @@
-﻿using Branch.Workspaces.Core.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Branch.Workspaces.Core.Models;
 using Community.VisualStudio.Toolkit;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Branch.Workspaces.Plugin
 {
